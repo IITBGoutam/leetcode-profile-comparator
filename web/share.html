@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export your LeetCode solved list</title>
+<style>
+  :root { --bg:#0f1115; --panel:#181b21; --panel2:#20242c; --line:#2a2f38;
+          --fg:#e6e9ef; --muted:#9aa4b2; --accent:#ffa116; --accent2:#3b82f6;
+          --easy:#22c55e; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:15.5px/1.6 system-ui,Segoe UI,Roboto,Arial,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:30px 22px 70px; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  h1 span { color:var(--accent); }
+  .lede { color:var(--muted); margin:0 0 26px; }
+  .card { background:var(--panel); border:1px solid var(--line);
+          border-radius:14px; padding:20px 22px; margin-bottom:20px; }
+  .step { display:flex; gap:14px; align-items:flex-start; }
+  .num { flex:0 0 30px; height:30px; border-radius:50%; background:var(--accent);
+         color:#111; font-weight:800; display:grid; place-items:center; margin-top:1px; }
+  .step h3 { margin:2px 0 6px; font-size:17px; }
+  .step p { margin:0 0 10px; color:var(--muted); }
+  code, .mono { font-family:ui-monospace,Consolas,Menlo,monospace; }
+  .inlinecode { background:var(--panel2); border:1px solid var(--line);
+                border-radius:6px; padding:1px 6px; font-size:13.5px; }
+  a.bm { display:inline-block; background:var(--accent); color:#111; font-weight:800;
+         text-decoration:none; padding:11px 20px; border-radius:10px; cursor:grab;
+         user-select:none; box-shadow:0 2px 0 #b9740f; }
+  a.bm:active { cursor:grabbing; }
+  .divider { display:flex; align-items:center; gap:12px; color:var(--muted);
+             font-size:13px; margin:20px 0; }
+  .divider::before, .divider::after { content:""; flex:1; height:1px; background:var(--line); }
+  textarea { width:100%; height:118px; background:#0b0d11; color:#cfe3ff;
+             border:1px solid var(--line); border-radius:10px; padding:12px;
+             font-family:ui-monospace,Consolas,monospace; font-size:12.5px; resize:vertical; }
+  button { cursor:pointer; border:none; border-radius:8px; font-weight:600;
+           padding:8px 16px; font-size:13.5px; background:var(--panel2);
+           color:var(--fg); border:1px solid var(--line); margin-top:8px; }
+  button.copied { border-color:var(--easy); color:var(--easy); }
+  .ok { color:var(--easy); }
+  .note { font-size:13.5px; color:var(--muted); border-left:3px solid var(--accent2);
+          padding:2px 0 2px 12px; margin:14px 0 0; }
+  kbd { background:var(--panel2); border:1px solid var(--line); border-bottom-width:2px;
+        border-radius:5px; padding:1px 6px; font-size:12.5px; font-family:inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Export your <span>Leet</span>Code solved list</h1>
+  <p class="lede">A friend wants to compare progress with you. This grabs the list
+    of problems you've solved — <b>nothing else</b>. No password, no cookie, no
+    account access. It runs in <i>your</i> browser and saves a small file you send back.</p>
+
+  <div class="card">
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <h3>Log in to LeetCode</h3>
+        <p>Open <a href="https://leetcode.com" target="_blank" rel="noopener">leetcode.com</a>
+           and make sure you're signed in. Keep that tab open.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="step">
+      <div class="num">2</div>
+      <div style="flex:1">
+        <h3>Run the exporter — pick either way</h3>
+
+        <p><b>Easiest:</b> drag this button up to your bookmarks bar. Then, while on a
+           LeetCode tab, click the bookmark.</p>
+        <a class="bm" id="bm" href="#">📌 Export LeetCode Solved</a>
+
+        <div class="divider">or</div>
+
+        <p><b>No bookmarks bar?</b> On a LeetCode tab press <kbd>F12</kbd> → <b>Console</b>,
+           paste this, press <kbd>Enter</kbd>:</p>
+        <textarea id="snippet" readonly spellcheck="false"></textarea>
+        <div><button id="copy">Copy snippet</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <h3>Send the file back</h3>
+        <p>It downloads <span class="inlinecode">leetcode-solved-&lt;you&gt;.json</span>
+           (a list of problem slugs — safe to share). Send that file to your friend.
+           They import it and the comparison is exact. <span class="ok">That's it 🎉</span></p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">Why this and not a cookie? Your <code>LEETCODE_SESSION</code> cookie
+    <i>is</i> your login — sharing it is risky, and browsers hide it from scripts anyway.
+    This exports only your public solved-problem slugs, so there's nothing sensitive to leak.</p>
+</div>
+
+<script>
+// One source of truth for the exporter, used for both the bookmarklet and the
+// console snippet. Every statement is semicolon-terminated so it survives being
+// flattened into a bookmarklet URL.
+const CODE =
+`(async()=>{
+  const gql=(q,v)=>fetch('/graphql',{method:'POST',credentials:'include',headers:{'content-type':'application/json','x-csrftoken':(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||''},body:JSON.stringify({query:q,variables:v})}).then(r=>r.json());
+  try{
+    const who=await gql('query{userStatus{username isSignedIn}}',{});
+    const us=(who.data||{}).userStatus||{};
+    if(!us.isSignedIn){alert('You are not logged in to LeetCode. Log in at leetcode.com, then run this again.');return;}
+    const username=us.username;
+    const Q='query($c:String!,$l:Int!,$s:Int!){questionList(categorySlug:$c,limit:$l,skip:$s,filters:{status:AC}){total:totalNum questions:data{titleSlug}}}';
+    let skip=0,total=null;const slugs=[];
+    do{
+      const j=await gql(Q,{c:'all-code-essentials',l:500,s:skip});
+      const b=j.data.questionList;total=b.total;
+      b.questions.forEach(x=>slugs.push(x.titleSlug));
+      skip+=b.questions.length;
+    }while(skip<total&&total>0);
+    const out={username:username,solved_slugs:slugs,generated:new Date().toISOString(),source:'leetcode-comparator'};
+    const blob=new Blob([JSON.stringify(out)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='leetcode-solved-'+username+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    alert('Done! Saved '+slugs.length+' solved problems to leetcode-solved-'+username+'.json\\n\\nSend that file to your friend.');
+  }catch(e){alert('Something went wrong: '+e.message+'\\nMake sure you are on a leetcode.com tab and logged in.');}
+})();`;
+
+document.getElementById("snippet").value = CODE;
+document.getElementById("bm").href = "javascript:" + encodeURIComponent(CODE);
+
+document.getElementById("copy").onclick = async (ev) => {
+  try { await navigator.clipboard.writeText(CODE); }
+  catch { const t=document.getElementById("snippet"); t.focus(); t.select(); document.execCommand("copy"); }
+  const b = ev.target; b.textContent = "Copied ✓"; b.classList.add("copied");
+  setTimeout(()=>{ b.textContent="Copy snippet"; b.classList.remove("copied"); }, 1600);
+};
+</script>
+</body>
+</html>

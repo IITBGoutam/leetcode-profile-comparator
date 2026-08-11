@@ -1,0 +1,14 @@
+# Local secrets — contains live LEETCODE_SESSION cookies
+config.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local cache of fetched LeetCode data
+cache/
+
+# Internal planning notes
+calude_file.txt

@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LeetCode Profile Comparator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316a34a'/%3E%3Ctext x='50' y='54' font-family='Arial,Helvetica,sans-serif' font-size='52' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3ECL%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg:#0f1115; --panel:#181b21; --panel2:#20242c; --line:#2a2f38;
+    --fg:#e6e9ef; --muted:#9aa4b2; --accent:#ffa116; --accent2:#3b82f6;
+    --easy:#22c55e; --medium:#f59e0b; --hard:#ef4444;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:15px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif; }
+  header { padding:18px 22px; border-bottom:1px solid var(--line);
+           display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:19px; margin:0; }
+  header h1 span { color:var(--accent); }
+  header .sub { color:var(--muted); font-size:13px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:20px 22px 60px; }
+  .card { background:var(--panel); border:1px solid var(--line);
+          border-radius:12px; padding:16px 18px; margin-bottom:18px; }
+  label { display:block; font-size:12px; color:var(--muted);
+          margin:0 0 4px 2px; text-transform:uppercase; letter-spacing:.04em; }
+  input, select {
+    width:100%; background:var(--panel2); border:1px solid var(--line);
+    color:var(--fg); border-radius:8px; padding:8px 10px; font-size:14px; }
+  input:focus, select:focus { outline:2px solid var(--accent2); border-color:transparent; }
+  .grid { display:grid; gap:12px 14px; }
+  .g2 { grid-template-columns:1fr 1fr; }
+  .g4 { grid-template-columns:repeat(4,1fr); }
+  .row { display:flex; gap:14px; flex-wrap:wrap; align-items:end; }
+  .row > div { flex:1 1 140px; }
+  .checkbox { display:flex; align-items:center; gap:7px; }
+  .checkbox input { width:auto; }
+  .checkbox label { margin:0; text-transform:none; letter-spacing:0; font-size:13px; }
+  button { cursor:pointer; border:none; border-radius:8px; font-weight:600;
+           padding:9px 18px; font-size:14px; }
+  .primary { background:var(--accent); color:#111; }
+  .primary:disabled { opacity:.5; cursor:default; }
+  .ghost { background:var(--panel2); color:var(--fg); border:1px solid var(--line); }
+  details.cookies summary { cursor:pointer; color:var(--muted); font-size:13px;
+           margin:6px 0; user-select:none; }
+  details.cookies .hint { color:var(--muted); font-size:12px; margin:2px 0 12px; }
+  .opt { background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+         padding:12px 14px; margin:10px 0; font-size:13.5px; }
+  .opt b { color:var(--fg); }
+  a.mini { font-size:13px; margin:0 4px; }
+  .inlinecode { font-family:ui-monospace,Consolas,monospace; font-size:12.5px;
+                background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:0 5px; }
+  input[type=file] { padding:6px; font-size:13px; }
+  .imp { font-size:12.5px; margin-top:5px; min-height:16px; }
+  .imp.good { color:var(--easy); }
+  .imp.bad { color:var(--hard); }
+  a { color:var(--accent2); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { background:var(--panel2); border:1px solid var(--line); color:var(--fg);
+          border-radius:999px; padding:6px 13px; font-size:13px; cursor:pointer; }
+  .chip .n { color:var(--muted); margin-left:6px; }
+  .chip.active { border-color:var(--accent); color:var(--accent); }
+
+  .totals { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .who { font-weight:700; margin-bottom:6px; }
+  .who .mode { font-weight:400; font-size:11px; color:var(--muted);
+               border:1px solid var(--line); border-radius:6px; padding:1px 6px; margin-left:6px; }
+  .who .mode.full { color:var(--easy); border-color:var(--easy); }
+  .barrow { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:13px; }
+  .barrow .lab { width:52px; color:var(--muted); }
+  .barrow .val { width:44px; text-align:right; font-variant-numeric:tabular-nums; }
+  .bar { flex:1; height:8px; background:var(--panel2); border-radius:5px; overflow:hidden; }
+  .bar > i { display:block; height:100%; border-radius:5px; }
+
+  .warn { background:#3a2a12; border:1px solid #6b4e1e; color:#f4d19a;
+          border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:13.5px; }
+  .status { color:var(--muted); font-size:13px; margin:4px 0 10px; }
+  .err { color:var(--hard); }
+
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--line);
+           font-size:14px; vertical-align:top; }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em;
+       cursor:pointer; user-select:none; white-space:nowrap; position:sticky; top:0;
+       background:var(--panel); }
+  th .arrow { color:var(--accent); }
+  td.num { color:var(--muted); font-variant-numeric:tabular-nums; }
+  .badge { font-size:12px; font-weight:700; padding:2px 9px; border-radius:6px; }
+  .Easy { color:var(--easy); background:rgba(34,197,94,.12); }
+  .Medium { color:var(--medium); background:rgba(245,158,11,.12); }
+  .Hard { color:var(--hard); background:rgba(239,68,68,.12); }
+  .tags { display:flex; gap:5px; flex-wrap:wrap; }
+  .tag { font-size:11.5px; color:var(--muted); background:var(--panel2);
+         border-radius:5px; padding:1px 7px; }
+  .tablewrap { overflow-x:auto; }
+  .empty { color:var(--muted); padding:24px 4px; text-align:center; }
+
+  .hintk { text-transform:none; letter-spacing:0; color:var(--accent2); font-size:11px; }
+  .ratehelp { color:var(--muted); font-size:12px; display:block; max-width:220px; line-height:1.35; }
+  .rating { font-variant-numeric:tabular-nums; font-weight:600; }
+  .rating.na { color:var(--muted); font-weight:400; }
+  .credit { color:var(--muted); font-size:12px; text-align:center; margin-top:26px; }
+
+  /* Manual "done" tick-off (stored locally in your browser). */
+  .donecol { width:34px; text-align:center; }
+  td.donecol input { width:17px; height:17px; cursor:pointer; accent-color:var(--easy); }
+  tr.donerow td { opacity:.42; }
+  tr.donerow td.donecol { opacity:1; }
+  tr.donerow a { text-decoration:line-through; }
+  .tablebar { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+              margin:2px 0 12px; }
+  .donecount { color:var(--easy); font-weight:600; font-size:13px; }
+  .donecount .z { color:var(--muted); font-weight:400; }
+  button.ghost.active { border-color:var(--accent); color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Leet</span>Code Profile Comparator</h1>
+  <span class="sub">Find the problems your friend solved that you haven't.</span>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="grid g2">
+      <div><label>Your username</label><input id="me" placeholder="e.g. alice" autocomplete="off"></div>
+      <div><label>Friend's username</label><input id="friend" placeholder="e.g. bob" autocomplete="off"></div>
+    </div>
+
+    <details class="cookies">
+      <summary>Full accurate mode (optional) — import a shared list, or use a cookie</summary>
+      <div class="hint">
+        LeetCode won't reveal a user's complete solved list publicly. Without one of
+        the options below, that person is compared in approximate "public" mode
+        (exact counts + only their last 20 solved). Two ways to get an exact list:
+      </div>
+
+      <div class="opt">
+        <b>A · Import a shared export</b> — easiest, and the only friendly option for your friend (no cookie).
+        <a class="mini" href="/share" target="_blank" rel="noopener">Open the share page →</a>
+        send it to your friend, then import the <span class="inlinecode">.json</span> they send back.
+        <div class="grid g2" style="margin-top:10px">
+          <div>
+            <label>Your exported list (optional)</label>
+            <input id="me_file" type="file" accept=".json,application/json">
+            <div class="imp" id="me_imp"></div>
+          </div>
+          <div>
+            <label>Friend's exported list</label>
+            <input id="friend_file" type="file" accept=".json,application/json">
+            <div class="imp" id="friend_imp"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="opt">
+        <b>B · Paste a session cookie</b> — quickest for <i>yourself</i>. Your
+        <b>LEETCODE_SESSION</b> (DevTools → Application → Cookies → leetcode.com).
+        Sent only to this local server, never stored in the browser.
+        <div class="grid g2" style="margin-top:10px">
+          <div><label>Your cookie</label><input id="me_cookie" type="password" placeholder="LEETCODE_SESSION=…" autocomplete="off"></div>
+          <div><label>Friend's cookie</label><input id="friend_cookie" type="password" placeholder="LEETCODE_SESSION=…" autocomplete="off"></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Difficulty</label>
+        <select id="difficulty">
+          <option value="">Any</option><option>Easy</option><option>Medium</option><option>Hard</option>
+        </select>
+      </div>
+      <div>
+        <label>Tags (comma-separated slugs)</label>
+        <input id="tags" placeholder="dynamic-programming, graph" autocomplete="off" list="taglist">
+        <datalist id="taglist"></datalist>
+      </div>
+      <div style="flex:0 0 auto" class="checkbox" title="Require all listed tags">
+        <input type="checkbox" id="all_tags"><label for="all_tags">Match all tags</label>
+      </div>
+      <div><label>Title search</label><input id="search" placeholder="tree" autocomplete="off"></div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Min rating <span class="hintk" id="rating_hint"></span></label>
+        <input id="rating_min" type="number" inputmode="numeric" placeholder="e.g. 1759" autocomplete="off">
+      </div>
+      <div>
+        <label>Max rating</label>
+        <input id="rating_max" type="number" inputmode="numeric" placeholder="e.g. 2434" autocomplete="off">
+      </div>
+      <div>
+        <label>Rating type</label>
+        <select id="rating_mode">
+          <option value="all">All problems</option>
+          <option value="rated">Rated only (contest)</option>
+          <option value="unrated">Unrated only</option>
+        </select>
+      </div>
+      <div style="flex:0 0 auto; align-self:end">
+        <span class="ratehelp">zerotrac difficulty score (~1000–3500). Unrated = never in a contest.</span>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:14px; align-items:center">
+      <div style="flex:0 0 auto" class="checkbox">
+        <input type="checkbox" id="refresh"><label for="refresh">Force refresh (ignore cache)</label>
+      </div>
+      <div style="flex:1"></div>
+      <button class="primary" id="go">Compare</button>
+    </div>
+  </div>
+
+  <div id="results" style="display:none">
+    <div class="card">
+      <div class="totals" id="totals"></div>
+    </div>
+
+    <div id="warnbox"></div>
+
+    <div class="chips" id="cats" style="margin-bottom:14px"></div>
+
+    <div class="card">
+      <div class="status" id="status"></div>
+      <div class="tablebar">
+        <button class="ghost" id="shuffle" title="Shuffle into a random order — click again to reshuffle"
+                style="padding:5px 12px; font-size:12.5px">🎲 Random order</button>
+        <span class="donecount" id="donecount"></span>
+        <div style="flex:1"></div>
+        <div class="checkbox" style="flex:0 0 auto">
+          <input type="checkbox" id="hide_done"><label for="hide_done">Hide problems I've ticked done</label>
+        </div>
+        <button class="ghost" id="clear_done" title="Untick every problem for this user"
+                style="padding:5px 12px; font-size:12.5px">Clear my ticks</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr id="head"></tr></thead>
+          <tbody id="body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="firsterr" class="err" style="margin-top:8px"></div>
+
+  <div class="credit">
+    Problem ratings from
+    <a href="https://github.com/zerotrac/leetcode_problem_rating" target="_blank" rel="noopener">zerotrac/leetcode_problem_rating</a>
+    — a community-maintained dataset.
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const CATS = [
+  ["friend-only","Friend solved, you haven't"],
+  ["me-only","You solved, friend hasn't"],
+  ["both","Both solved"],
+  ["neither","Neither solved"],
+];
+const DIFF_RANK = {Easy:0, Medium:1, Hard:2};
+let state = { data:null, sortKey:"difficulty", sortDesc:false, diff:"friend-only",
+              meImport:null, friendImport:null,
+              done:new Set(), doneUser:"", hideDone:false, rand:{} };
+
+// ---- manual "done" tick-off, persisted per-user in localStorage ----
+// This is YOUR personal progress overlay — a satisfying manual checkbox that is
+// completely independent of what LeetCode reports. Nothing is sent to a server.
+function doneKey(user) { return "probfinder_done_" + (user || "_anon").toLowerCase(); }
+function loadDone(user) {
+  state.doneUser = user || "";
+  try {
+    const raw = localStorage.getItem(doneKey(user));
+    state.done = new Set(raw ? JSON.parse(raw) : []);
+  } catch (e) { state.done = new Set(); }
+}
+function saveDone() {
+  try {
+    localStorage.setItem(doneKey(state.doneUser), JSON.stringify([...state.done]));
+  } catch (e) { /* storage full / disabled — ticks just won't persist */ }
+}
+function toggleDone(slug, on) {
+  if (on) state.done.add(slug); else state.done.delete(slug);
+  saveDone();
+}
+
+// ---- import a shared export file (from the /share snippet) ----
+function wireImport(fileId, impId, key, usernameId) {
+  $(fileId).addEventListener("change", (e) => {
+    const box = $(impId); box.className = "imp";
+    const f = e.target.files[0];
+    if (!f) { state[key] = null; box.textContent = ""; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const j = JSON.parse(reader.result);
+        const slugs = Array.isArray(j) ? j : j.solved_slugs;
+        if (!Array.isArray(slugs) || !slugs.length)
+          throw new Error("no solved_slugs found");
+        state[key] = slugs;
+        if (j.username && !$(usernameId).value) $(usernameId).value = j.username;
+        box.classList.add("good");
+        box.textContent = `✓ imported ${slugs.length} solved` +
+          (j.username ? ` for ${j.username}` : "");
+      } catch (err) {
+        state[key] = null;
+        box.classList.add("bad");
+        box.textContent = "✗ not a valid export file (" + err.message + ")";
+      }
+    };
+    reader.readAsText(f);
+  });
+}
+wireImport("me_file", "me_imp", "meImport", "me");
+wireImport("friend_file", "friend_imp", "friendImport", "friend");
+
+// Load tag suggestions once.
+fetch("/api/tags").then(r=>r.json()).then(tags=>{
+  if (!Array.isArray(tags)) return;
+  $("taglist").innerHTML = tags.slice(0,120)
+    .map(t=>`<option value="${t.slug}">${t.count}</option>`).join("");
+}).catch(()=>{});
+
+function params() {
+  return {
+    me: $("me").value, friend: $("friend").value,
+    me_cookie: $("me_cookie").value, friend_cookie: $("friend_cookie").value,
+    me_solved: state.meImport, friend_solved: state.friendImport,
+    diff: state.diff,
+    difficulty: $("difficulty").value,
+    tags: $("tags").value.split(",").map(s=>s.trim()).filter(Boolean),
+    all_tags: $("all_tags").checked,
+    search: $("search").value.trim(),
+    rating_min: $("rating_min").value.trim(),
+    rating_max: $("rating_max").value.trim(),
+    rating_mode: $("rating_mode").value,
+    sort: state.sortKey, desc: state.sortDesc,
+    refresh: $("refresh").checked,
+  };
+}
+
+async function run() {
+  $("firsterr").textContent = "";
+  $("go").disabled = true; $("go").textContent = "Fetching…";
+  try {
+    const res = await fetch("/api/compare", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(params()),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || ("HTTP "+res.status));
+    state.data = data;
+    $("refresh").checked = false; // one-shot
+    render();
+    $("results").style.display = "block";
+  } catch (e) {
+    $("firsterr").textContent = "Error: " + e.message;
+  } finally {
+    $("go").disabled = false; $("go").textContent = "Compare";
+  }
+}
+
+function userBlock(u, other) {
+  const c = u.counts || {};
+  const modeCls = u.mode === "full" ? "mode full" : "mode";
+  const modeTxt = u.mode === "full" ? "full" : "public (≈)";
+  const max = Math.max(1, c.All||0, (other.counts||{}).All||0);
+  const bar = (lab, key, color) => {
+    const v = c[key]||0;
+    return `<div class="barrow"><span class="lab">${lab}</span>
+      <span class="bar"><i style="width:${100*v/max}%;background:${color}"></i></span>
+      <span class="val">${v}</span></div>`;
+  };
+  return `<div>
+    <div class="who">${escapeHtml(u.username)} <span class="${modeCls}">${modeTxt}</span></div>
+    ${bar("All","All","var(--accent2)")}
+    ${bar("Easy","Easy","var(--easy)")}
+    ${bar("Med","Medium","var(--medium)")}
+    ${bar("Hard","Hard","var(--hard)")}
+  </div>`;
+}
+
+function render() {
+  const d = state.data;
+  // Load this user's personal tick list (switches if the username changed).
+  if (d.me && d.me.username !== state.doneUser) loadDone(d.me.username);
+  $("totals").innerHTML = userBlock(d.me, d.friend) + userBlock(d.friend, d.me);
+  $("warnbox").innerHTML = d.warning ? `<div class="warn">⚠ ${escapeHtml(d.warning)}</div>` : "";
+
+  $("cats").innerHTML = CATS.map(([k,label])=>
+    `<div class="chip ${k===state.diff?"active":""}" data-cat="${k}">
+       ${label}<span class="n">${d.sizes[k]}</span></div>`).join("");
+  $("cats").querySelectorAll(".chip").forEach(el=>{
+    el.onclick = () => { state.diff = el.dataset.cat; run(); };
+  });
+
+  // Show the rated range present in this bucket next to the Min-rating box.
+  if (d.rating_span) {
+    $("rating_hint").textContent = `(${d.rating_span[0]}–${d.rating_span[1]})`;
+  } else {
+    $("rating_hint").textContent = "";
+  }
+
+  const cols = [["title","Title"],["difficulty","Difficulty"],
+                ["rating","Rating"],["acrate","AC %"]];
+  $("head").innerHTML = `<th class="donecol" title="Tick when you've solved it">✓</th>`
+    + `<th class="num">#</th>` + cols.map(([k,l])=>{
+    const arr = state.sortKey===k ? `<span class="arrow">${state.sortDesc?"▼":"▲"}</span>` : "";
+    return `<th data-key="${k}">${l} ${arr}</th>`;
+  }).join("");
+  $("head").querySelectorAll("th[data-key]").forEach(th=>{
+    th.onclick = () => {
+      const k = th.dataset.key;
+      if (state.sortKey===k) state.sortDesc = !state.sortDesc;
+      else { state.sortKey = k; state.sortDesc = (k==="acrate"); }
+      renderRows(); // client-side re-sort, no refetch
+      // refresh header arrows
+      render();
+    };
+  });
+
+  $("status").textContent =
+    `${d.count} problem${d.count===1?"":"s"} in “${CATS.find(c=>c[0]===state.diff)[1]}”`;
+  $("shuffle").classList.toggle("active", state.sortKey==="random");
+  renderRows();
+}
+
+// Assign each currently-listed problem a fresh random weight, then order by it.
+// Clicking the button again reshuffles. Any column-header click leaves random.
+function shuffle() {
+  const probs = state.data ? state.data.problems : [];
+  state.rand = {};
+  probs.forEach(p => { state.rand[p.slug] = Math.random(); });
+  state.sortKey = "random"; state.sortDesc = false;
+  render();
+}
+
+function sortedRows() {
+  const rows = [...state.data.problems];
+  const k = state.sortKey;
+  // Random order: sort by the per-problem random weight assigned by shuffle().
+  // Ties (e.g. problems added after the last shuffle) fall back to title.
+  if (k==="random") {
+    rows.sort((a,b)=>{
+      const x = state.rand[a.slug] ?? 2, y = state.rand[b.slug] ?? 2;
+      if (x<y) return -1; if (x>y) return 1;
+      return a.title.toLowerCase()<b.title.toLowerCase()?-1:1;
+    });
+    return rows;
+  }
+  rows.sort((a,b)=>{
+    let x, y;
+    if (k==="title") { x=a.title.toLowerCase(); y=b.title.toLowerCase(); }
+    else if (k==="acrate") { x=a.ac_rate; y=b.ac_rate; }
+    else if (k==="rating") {
+      // Unrated (null) counts as the lowest value: first ascending, last descending.
+      x = a.rating==null ? -1 : a.rating; y = b.rating==null ? -1 : b.rating;
+    }
+    else { x=DIFF_RANK[a.difficulty]; y=DIFF_RANK[b.difficulty]; }
+    if (x<y) return state.sortDesc?1:-1;
+    if (x>y) return state.sortDesc?-1:1;
+    return a.title.toLowerCase()<b.title.toLowerCase()?-1:1;
+  });
+  return rows;
+}
+
+function updateDoneCount() {
+  // How many of the currently-listed problems you've ticked (dopamine meter).
+  const all = state.data ? state.data.problems : [];
+  const doneHere = all.filter(p => state.done.has(p.slug)).length;
+  $("donecount").innerHTML = all.length
+    ? `${doneHere} <span class="z">/ ${all.length} ticked done</span>`
+    : "";
+}
+
+function renderRows() {
+  let rows = sortedRows();
+  if (state.hideDone) rows = rows.filter(p => !state.done.has(p.slug));
+  updateDoneCount();
+  if (!rows.length) { $("body").innerHTML =
+    `<tr><td colspan="6" class="empty">No problems match these filters.</td></tr>`; return; }
+  $("body").innerHTML = rows.map((p,i)=>{
+    const done = state.done.has(p.slug);
+    return `
+    <tr class="${done?"donerow":""}">
+      <td class="donecol"><input type="checkbox" data-slug="${p.slug}" ${done?"checked":""}
+          title="Tick when you've solved this"></td>
+      <td class="num">${i+1}</td>
+      <td><a href="${p.url}" target="_blank" rel="noopener">${escapeHtml(p.title)}</a></td>
+      <td><span class="badge ${p.difficulty}">${p.difficulty}</span></td>
+      <td>${p.rating==null
+            ? `<span class="rating na">—</span>`
+            : `<span class="rating">${p.rating}</span>`}</td>
+      <td class="num">${p.ac_rate.toFixed(1)}%</td>
+    </tr>`;}).join("");
+
+  // Wire each checkbox: tick -> persist -> restyle (or hide) instantly.
+  $("body").querySelectorAll("input[data-slug]").forEach(cb => {
+    cb.onchange = () => {
+      toggleDone(cb.dataset.slug, cb.checked);
+      if (state.hideDone) renderRows();        // ticked row vanishes from view
+      else {
+        cb.closest("tr").classList.toggle("donerow", cb.checked);
+        updateDoneCount();
+      }
+    };
+  });
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,
+  c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+$("go").onclick = () => { state.diff = state.diff || "friend-only"; run(); };
+["me","friend","tags","search","rating_min","rating_max"].forEach(id=>
+  $(id).addEventListener("keydown", e=>{ if(e.key==="Enter") run(); }));
+
+// ---- manual done-list controls ----
+$("hide_done").addEventListener("change", () => {
+  state.hideDone = $("hide_done").checked;
+  if (state.data) renderRows();
+});
+$("shuffle").addEventListener("click", () => { if (state.data) shuffle(); });
+$("clear_done").addEventListener("click", () => {
+  if (!state.done.size) return;
+  const who = state.doneUser || "this user";
+  if (!confirm(`Untick all ${state.done.size} problems marked done for ${who}?`)) return;
+  state.done.clear();
+  saveDone();
+  if (state.data) renderRows();
+});
+</script>
+</body>
+</html>

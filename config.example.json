@@ -1,0 +1,9 @@
+{
+  "me": "your_leetcode_username",
+  "friend": "friends_leetcode_username",
+
+  "_comment": "Cookies are OPTIONAL but required for the FULL solved list. Copy this file to config.json and fill in. The cookie value is the LEETCODE_SESSION cookie from your browser (DevTools > Application > Cookies > leetcode.com). Leave a cookie out to fetch that user in public mode (counts + last 20 solved only).",
+
+  "me_cookie": "LEETCODE_SESSION=PASTE_YOURS_HERE",
+  "friend_cookie": "LEETCODE_SESSION=PASTE_FRIENDS_HERE"
+}
