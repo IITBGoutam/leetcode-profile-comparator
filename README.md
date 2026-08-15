@@ -44,6 +44,7 @@ Both share the exact same backend (`fetch`/`diff`/`filters`/`cache`).
 Requires **Python 3.10+**. No third-party packages — standard library only.
 
 ### Web UI
+<img width="1572" height="898" alt="image" src="https://github.com/user-attachments/assets/9535d52b-f0ae-4048-bf06-d90d2c2bebf3" />
 
 ```
 python server.py                 # opens http://localhost:8010 in your browser
