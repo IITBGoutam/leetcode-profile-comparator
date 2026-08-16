@@ -105,3 +105,40 @@ def save_user(user: UserSolved) -> None:
             "solved_slugs": sorted(user.solved_slugs),
             "counts": user.counts,
         }, f)
+
+
+def saved_at(username: str) -> float | None:
+    """When this user's snapshot was last written, or None if there isn't one."""
+    path = _user_path(username)
+    try:
+        return os.path.getmtime(path)
+    except OSError:
+        return None
+
+
+def list_users() -> dict[str, dict]:
+    """Summarise every saved snapshot, for the UI's "saved lists" panel.
+
+    Reads each file rather than trusting the filename, since _user_path strips
+    characters and the stored `username` is the authoritative spelling.
+    """
+    out: dict[str, dict] = {}
+    try:
+        names = os.listdir(USERS_DIR)
+    except OSError:
+        return out
+    for name in names:
+        if not name.endswith(".json"):
+            continue
+        path = os.path.join(USERS_DIR, name)
+        try:
+            with open(path, encoding="utf-8") as f:
+                d = json.load(f)
+            out[d["username"]] = {
+                "mode": d["mode"],
+                "solved": len(d["solved_slugs"]),
+                "saved_at": os.path.getmtime(path),
+            }
+        except (OSError, ValueError, KeyError, TypeError):
+            continue  # a corrupt snapshot shouldn't break the settings page
+    return out

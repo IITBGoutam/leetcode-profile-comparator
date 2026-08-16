@@ -30,12 +30,12 @@ import os
 import sys
 
 import cache
+import credstore
 import fetch
 from diff import CATEGORIES, categorize, partial_warning
 from filters import apply_filters, sort_problems
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "config.json")
+CONFIG_PATH = credstore.CONFIG_PATH
 
 CATEGORY_LABEL = {
     "friend-only": "Friend solved, you haven't  (catch-up list)",
@@ -49,13 +49,21 @@ CATEGORY_LABEL = {
 # Config / cookie resolution
 # --------------------------------------------------------------------------- #
 def load_config() -> dict:
-    if os.path.exists(CONFIG_PATH):
-        try:
-            with open(CONFIG_PATH, encoding="utf-8") as f:
-                return json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
-            print(f"warning: could not read config.json ({e})", file=sys.stderr)
-    return {}
+    """config.json with any saved cookies decrypted back into plain values.
+
+    The web UI writes cookies as `me_cookie_enc` / `friend_cookie_enc` (DPAPI on
+    Windows — see credstore.py). Decrypting them here means every caller below —
+    resolve(), the server, the CLI — keeps seeing the same plain `me_cookie` /
+    `friend_cookie` keys it always did, and a hand-written plaintext config.json
+    still works with no migration.
+    """
+    cfg = credstore.read_config_raw()
+    for key in credstore.COOKIE_KEYS:
+        if not cfg.get(key) and cfg.get(key + "_enc"):
+            cookie = credstore.unprotect(cfg[key + "_enc"])
+            if cookie:
+                cfg[key] = cookie
+    return cfg
 
 
 def resolve(value: str | None, env_key: str, cfg_val: str | None) -> str | None:
