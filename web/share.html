@@ -88,10 +88,19 @@
     <div class="step">
       <div class="num">3</div>
       <div>
-        <h3>Send the file back</h3>
-        <p>It downloads <span class="inlinecode">leetcode-solved-&lt;you&gt;.json</span>
-           (a list of problem slugs — safe to share). Send that file to your friend.
-           They import it and the comparison is exact. <span class="ok">That's it 🎉</span></p>
+        <h3>That's it</h3>
+        <p><b>Running the comparator yourself?</b> The list goes straight into it —
+           nothing to download, nothing to import. Just switch back and hit Compare.
+           Re-run the bookmark whenever you want to refresh it.
+           <span class="ok">🎉</span></p>
+        <p class="note" style="margin:6px 0 0">Chrome may first ask whether
+           leetcode.com may reach devices on your local network — that's this page
+           talking to the comparator on your own machine. Choose <b>Allow</b>. If you
+           dismiss it, nothing breaks: it falls back to downloading the file below.</p>
+        <p><b>Doing this for a friend?</b> With no comparator running, it falls back to
+           downloading <span class="inlinecode">leetcode-solved-&lt;you&gt;.json</span>
+           (a list of problem slugs — safe to share). Send that file to your friend;
+           they import it and the comparison is exact.</p>
       </div>
     </div>
   </div>
@@ -105,8 +114,16 @@
 // One source of truth for the exporter, used for both the bookmarklet and the
 // console snippet. Every statement is semicolon-terminated so it survives being
 // flattened into a bookmarklet URL.
+
+// The comparator's own address, baked in at generation time so a non-default
+// --port still works. When the comparator is running on this machine the
+// snippet posts the list straight to it; otherwise it falls back to the
+// download, which is what a friend who was just sent the bookmarklet gets.
+const SERVER = JSON.stringify(location.origin);
+
 const CODE =
 `(async()=>{
+  const SERVER=${SERVER};
   const gql=(q,v)=>fetch('/graphql',{method:'POST',credentials:'include',headers:{'content-type':'application/json','x-csrftoken':(document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||''},body:JSON.stringify({query:q,variables:v})}).then(r=>r.json());
   try{
     const who=await gql('query{userStatus{username isSignedIn}}',{});
@@ -122,6 +139,15 @@ const CODE =
       skip+=b.questions.length;
     }while(skip<total&&total>0);
     const out={username:username,solved_slugs:slugs,generated:new Date().toISOString(),source:'leetcode-comparator'};
+    try{
+      // Chrome can hold a page->localhost request pending a "local network"
+      // permission prompt, so this is time-boxed: no answer in 5s and we just
+      // download the file instead of leaving the user staring at nothing.
+      const ac=new AbortController();const t=setTimeout(()=>ac.abort(),5000);
+      const r=await fetch(SERVER+'/api/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(out),signal:ac.signal});
+      clearTimeout(t);
+      if(r.ok){alert('Sent '+slugs.length+' solved problems straight to the comparator \\u2713\\n\\nNothing to download \\u2014 just switch back and hit Compare.');return;}
+    }catch(e){}
     const blob=new Blob([JSON.stringify(out)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download='leetcode-solved-'+username+'.json';

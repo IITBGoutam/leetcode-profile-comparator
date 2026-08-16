@@ -1,5 +1,6 @@
-# Local secrets — contains live LEETCODE_SESSION cookies
+# Local secrets — contains your LEETCODE_SESSION cookies (encrypted on Windows)
 config.json
+.config-*.tmp
 
 # Python
 __pycache__/

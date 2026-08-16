@@ -51,12 +51,17 @@ python server.py --port 9000     # custom port (e.g. to avoid a clash)
 python server.py --no-open       # don't auto-open the browser
 ```
 
-Enter both usernames, optionally expand **Session cookies** to paste each
+Enter both usernames, optionally expand **Full accurate mode** to paste each
 person's `LEETCODE_SESSION` (for an exact diff), then **Compare**. Set a
 **Min/Max rating** window (and a rated / unrated toggle) to narrow to a precise
 difficulty band. Click a category chip to switch between friend-only / me-only /
 both / neither, and click any column header (incl. **Rating**) to sort. Cookies
 are POSTed to the local server only — never put in a URL and never cached.
+
+**You only fill this in once.** With *Remember on this computer* ticked (it is by
+default), a successful comparison saves your usernames and cookies locally, and
+every later visit comes back pre-filled — start the app, press **Compare**. See
+[Staying signed in](#staying-signed-in).
 
 ### CLI
 
@@ -70,6 +75,36 @@ Or save usernames (and optionally cookies) so you don't retype them:
 copy config.example.json config.json    # then edit config.json
 python compare.py                        # reads --me/--friend from config.json
 ```
+
+Easier: run the web UI once with **Remember on this computer** ticked — it writes
+`config.json` for you (cookies encrypted), and the CLI then picks it up.
+
+## Staying signed in
+
+Nothing here should have to be typed twice. After a comparison succeeds, the web
+UI saves what you entered to `config.json` next to the code, and reloads it on
+every later visit — usernames pre-filled, cookie fields showing
+`✓ saved (…9f2a) — leave blank to reuse it`. The **Remember on this computer**
+checkbox controls this, and **Forget saved details** wipes it.
+
+- **The cookie never goes into the browser.** It is stored server-side; the page
+  is only ever told *that* one is saved, plus its last four characters.
+- **On Windows it is encrypted with DPAPI**, tied to your Windows account: the
+  stored value is useless on another machine or under another user. You'll see it
+  as `"me_cookie_enc": "dpapi:…"`. An older hand-written `config.json` with a
+  plaintext cookie is upgraded automatically the first time the UI saves.
+- **On Linux/macOS there is no dependency-free equivalent**, so the cookie is
+  stored as `plain:…` with the file mode set to `0600`. Nothing else changes.
+- `config.json` is gitignored either way.
+
+### An expired cookie can't break a working setup
+
+Session cookies die after about two weeks. That no longer matters much: every
+profile you fetch is saved to `cache/users/`, and **that snapshot is what the
+comparison runs on**. If a refresh fails — expired cookie, no internet — the
+comparison still renders from the saved list and shows an amber note instead of
+an error. Each profile displays *Saved list · 3 days ago* with an **Update now**
+button when you do want fresh data (paste a new cookie first if it asks).
 
 ## Getting the full, accurate list
 
@@ -93,7 +128,13 @@ own solved list without them ever copying a cookie. It downloads a small file
 4. They send you that file. In the web UI, open **Full accurate mode → A · Import
    a shared export** and pick their file. (CLI: `--friend-solved theirfile.json`.)
 
-The same works for your own list, if you'd rather not use a cookie.
+The same works for your own list, if you'd rather not use a cookie — and when you
+run the bookmarklet **on the machine that's running the comparator**, it skips the
+file entirely and pushes the list straight into it: click the bookmark on a
+LeetCode tab, switch back, press Compare. Chrome may first ask whether
+leetcode.com can reach devices on your local network (that's the page talking to
+your own comparator) — choose **Allow**. Decline it and you simply get the
+downloadable file instead.
 
 ### Quickest for yourself: your session cookie
 
@@ -107,10 +148,13 @@ The cookie value comes from your own logged-in browser session:
 
 | Where | How | Best when |
 |-------|-----|-----------|
-| **Web UI field** | Full accurate mode → B · paste into "Your cookie" | one-off, in the browser |
-| **Environment variable** | `setx LEETCODE_COOKIE_ME "LEETCODE_SESSION=…"` (PowerShell) | you use it often; keeps it out of shell history |
-| **`config.json`** | `"me_cookie": "LEETCODE_SESSION=…"` | convenient but plaintext on disk — keep private |
+| **Web UI field** | Full accurate mode → B · paste into "Your cookie" | almost always — tick *Remember* and you never paste it again |
+| **Environment variable** | `setx LEETCODE_COOKIE_ME "LEETCODE_SESSION=…"` (PowerShell) | shared machines; keeps it out of any file |
+| **`config.json`** | written for you by the UI as `me_cookie_enc` (encrypted) | the default once you've ticked *Remember* |
 | **CLI flag** | `--me-cookie "LEETCODE_SESSION=…"` | scripting |
+
+The CLI reads the same saved `config.json`, so a cookie saved from the web UI
+works for `python compare.py` too.
 
 You can paste the bare token or the whole `LEETCODE_SESSION=…` string — either
 works. Cookies are used only for requests to leetcode.com and are **never written
